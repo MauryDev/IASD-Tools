@@ -1,63 +1,51 @@
-﻿@page "/weather"
+﻿@page "/provaivede"
+@inject IProvaiVedeTools provaiVedeTools
+@using System.Diagnostics
+@using IASD.Sonoplastia.Services
+<PageTitle>Informativo</PageTitle>
 
-<PageTitle>Weather</PageTitle>
+<MudText Typo="Typo.h2">Informativo</MudText>
 
-<h1>Weather</h1>
-
-<p>This component demonstrates showing data.</p>
-
-@if (forecasts == null)
+@if (isloading)
 {
-    <p><em>Loading...</em></p>
+    <MudOverlay DarkBackground="true" Visible="true">
+        <MudProgressCircular Color="Color.Secondary" Indeterminate="true" />
+    </MudOverlay>
 }
-else
+@if (informativoInfo != null)
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <MudText Typo="Typo.h4"><b>@informativoInfo.Titulo</b></MudText>
+    <MudImage Src="@provaiVedeTools.PreviewImage()" />
+    <MudText Typo="Typo.body1">@informativoInfo.Descricao</MudText>
+    <MudText Typo="Typo.body1">Data: @informativoInfo.Data</MudText>
+    <div class="mb-2">
+        <MudButton Color="Color.Dark" Variant="Variant.Filled" Class="btn btn-primary ms-2" OnClick="IncrementCount">Abrir</MudButton>
+    </div>
+    <MudText Typo="Typo.body1">Pre-Visualização</MudText>
+
+    <video width="400" controls>
+        <source src="@provaiVedeTools.PreviewVideo()" type="video/mp4">
+    </video>
 }
+
 
 @code {
-    private WeatherForecast[]? forecasts;
-
-    protected override async Task OnInitializedAsync()
+    Data.ProvaiVedeInfo informativoInfo;
+    bool isloading = false;
+    protected async override Task OnInitializedAsync()
     {
-        // Simulate asynchronous loading to demonstrate a loading indicator
-        await Task.Delay(500);
+        isloading = true;
+        this.StateHasChanged();
+        await provaiVedeTools.Download();
+        await base.OnInitializedAsync();
 
-        var startDate = DateOnly.FromDateTime(DateTime.Now);
-        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        {
-            Date = startDate.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = summaries[Random.Shared.Next(summaries.Length)]
-        }).ToArray();
+        informativoInfo = provaiVedeTools.Info;
+        isloading = false;
+        this.StateHasChanged();
     }
-
-    private class WeatherForecast
+    private void IncrementCount()
     {
-        public DateOnly Date { get; set; }
-        public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+
+        provaiVedeTools.Open();
     }
 }

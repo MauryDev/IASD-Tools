@@ -15,6 +15,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddMudServices();
 builder.Services.AddSingleton<IInformativoTools, InformativoTools>();
+builder.Services.AddSingleton<IProvaiVedeTools, ProvaiVedeTools>();
 
 var app = builder.Build();
 

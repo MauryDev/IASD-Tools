@@ -2,7 +2,6 @@
 
 namespace IASD.Sonoplastia.Services;
 
-public interface IInformativoTools : IBaseTools<InformativoInfo>
+public interface IProvaiVedeTools : IBaseTools<ProvaiVedeInfo>
 {
-    
 }
