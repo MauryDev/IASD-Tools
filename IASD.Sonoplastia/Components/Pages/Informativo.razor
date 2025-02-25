@@ -1,51 +1,6 @@
 ﻿@page "/informativo"
 @inject IInformativoTools informativoTools
-@using System.Diagnostics
 @using IASD.Sonoplastia.Services
-<PageTitle>Informativo</PageTitle>
 
-<MudText Typo="Typo.h2">Informativo</MudText>
-
-@if (isloading)
-{
-    <MudOverlay DarkBackground="true" Visible="true">
-        <MudProgressCircular Color="Color.Secondary" Indeterminate="true" />
-    </MudOverlay>
-}
-@if (informativoInfo != null)
-{
-    <MudText Typo="Typo.h4"><b>@informativoInfo.Titulo</b></MudText>
-    <MudImage Src="@informativoTools.PreviewImage()" />
-    <MudText Typo="Typo.body1">@informativoInfo.Descricao</MudText>
-    <MudText Typo="Typo.body1">Data: @informativoInfo.Data</MudText>
-    <div class="mb-2">
-        <MudButton Color="Color.Dark" Variant="Variant.Filled" Class="btn btn-primary ms-2" OnClick="IncrementCount">Abrir</MudButton>
-    </div>
-    <MudText Typo="Typo.body1">Pre-Visualização</MudText>
-
-    <video width="400" controls>
-        <source src="@informativoTools.PreviewVideo()" type="video/mp4">
-    </video>
-}
-
-
-@code {
-    Data.InformativoInfo informativoInfo;
-    bool isloading = false;
-    protected async override Task OnInitializedAsync()
-    {
-        isloading = true;
-        this.StateHasChanged();
-        await informativoTools.Download();
-        await base.OnInitializedAsync();
-
-        informativoInfo = informativoTools.Info;
-        isloading = false;
-        this.StateHasChanged();
-    }
-    private void IncrementCount()
-    {
-
-        informativoTools.Open();
-    }
-}
+<ListAudio/>
+<ContentDisplay T="Data.InformativoInfo" Title="Informativo" tools="informativoTools" />

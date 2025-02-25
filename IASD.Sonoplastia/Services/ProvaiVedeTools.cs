@@ -10,7 +10,7 @@ namespace IASD.Sonoplastia.Services
         protected override string VideoCache => Path.Combine(BasePath, "video.mp4");
         protected override string ImageCache => Path.Combine(BasePath, "image.jpg");
         protected override string InfoCache => Path.Combine(BasePath, "info.json");
-        protected override string FileJSON => "C:\\Users\\Maury\\source\\repos\\IASD Tools\\API\\Data\\provai-e-vede.json";
+        protected override string FileJSON => "https://raw.githubusercontent.com/MauryDev/IASD-Tools/refs/heads/master/API/Data/provai-e-vede.json";
 
         protected override string WebBasePath => "ProvaiVede";
     }

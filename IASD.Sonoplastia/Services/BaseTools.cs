@@ -1,10 +1,11 @@
-﻿using System.IO.Compression;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Diagnostics;
+using System.Security.Cryptography.Xml;
+using System;
 
 namespace IASD.Sonoplastia.Services;
 
-public abstract class BaseTools<T> where T : IASD.Sonoplastia.Data.FileInfo
+public abstract class BaseTools<T> where T : Data.FileInfo
 {
     protected IWebHostEnvironment environment;
     protected T? curinfo;
@@ -19,7 +20,6 @@ public abstract class BaseTools<T> where T : IASD.Sonoplastia.Data.FileInfo
 
     protected abstract string BasePath { get; }
     protected abstract string WebBasePath { get; }
-
     protected abstract string VideoCache { get; }
     protected abstract string ImageCache { get; }
     protected abstract string InfoCache { get; }
@@ -31,24 +31,33 @@ public abstract class BaseTools<T> where T : IASD.Sonoplastia.Data.FileInfo
     {
         var oldinfo = curinfo;
         var newinfo = await GetInfo();
-        var canUpdate = oldinfo == null || !oldinfo.Equals(newinfo);
+        var canUpdate = oldinfo == null || oldinfo.Data != newinfo.Data;
         using HttpClient api = new();
         if (canUpdate || !File.Exists(VideoCache))
         {
             using var response = await api.GetStreamAsync(newinfo.Image);
+            var imgstream = await OnImageDownload(response);
             using var imagefile = File.OpenWrite(ImageCache);
-            await response.CopyToAsync(imagefile);
+            await imgstream.CopyToAsync(imagefile);
         }
         if (canUpdate || !File.Exists(VideoCache))
         {
             using var response = await api.GetStreamAsync(newinfo.Url);
-            using ZipArchive zipfile = new(response);
-            var filemp4 = zipfile.Entries.First((e) => !e.FullName.Contains('/'));
-            Directory.CreateDirectory(BasePath);
-            filemp4.ExtractToFile(VideoCache, true);
+            var videostream = await OnVideoDownload(response);
+            var fstream = File.OpenWrite(VideoCache);
+            await videostream.CopyToAsync(fstream);
+          
         }
+        await Task.Delay(100);
     }
-
+    protected virtual Task<Stream> OnVideoDownload(Stream stream)
+    {
+        return Task.FromResult(stream);
+    }
+    protected virtual Task<Stream> OnImageDownload(Stream stream)
+    {
+        return Task.FromResult(stream);
+    }
     protected T? GetCacheInfo()
     {
         if (File.Exists(InfoCache))
@@ -59,24 +68,27 @@ public abstract class BaseTools<T> where T : IASD.Sonoplastia.Data.FileInfo
         return null;
     }
 
-    public Task<T> GetInfo()
+    public async Task<T> GetInfo()
     {
-        curinfo = JsonSerializer.Deserialize<T>(File.ReadAllText(FileJSON));
+        using HttpClient api = new();
+        var jsonapi = await api.GetStringAsync(FileJSON);
+        curinfo = JsonSerializer.Deserialize<T>(jsonapi);
         var cache = GetCacheInfo();
-        if (cache == null || !cache.Equals(curinfo))
+        if (cache == null || cache.Data != curinfo.Data)
         {
             File.WriteAllText(InfoCache, JsonSerializer.Serialize(curinfo));
         }
-        return Task.FromResult(curinfo)!;
+        return curinfo!;
     }
 
     public void Open()
     {
-        Process.Start(new ProcessStartInfo()
+        var info = new ProcessStartInfo()
         {
-            FileName = VideoCache,
-            UseShellExecute = true
-        });
+            FileName = "C:\\Users\\Maury\\source\\repos\\IASD Tools\\VideoPlay\\bin\\Debug\\net8.0-windows\\VideoPlay.exe",
+        };
+        info.ArgumentList.Add(VideoCache);
+        Process.Start(info);
     }
 
     public string PreviewVideo()

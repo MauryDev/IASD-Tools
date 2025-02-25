@@ -1,0 +1,51 @@
+﻿@typeparam T where T : Data.FileInfo
+@using IASD.Sonoplastia.Services
+@using System.Diagnostics
+<PageTitle>@Title</PageTitle>
+
+<MudText Typo="Typo.h2">@Title</MudText>
+
+@if (isloading)
+{
+    <MudOverlay DarkBackground="true" Visible="true">
+        <MudProgressCircular Color="Color.Secondary" Indeterminate="true" />
+    </MudOverlay>
+}
+@if (info != null)
+{
+    <MudText Typo="Typo.h4"><b>@info.Titulo</b></MudText>
+    <MudImage Src="@Tools.PreviewImage()" Width="500" />
+    <MudText Typo="Typo.body1">@info.Descricao</MudText>
+    <MudText Typo="Typo.body1">Data: @info.Data</MudText>
+    <div class="mb-2">
+        <MudButton Color="Color.Dark" Variant="Variant.Filled" Class="btn btn-primary ms-2" OnClick="OpenContent">Abrir</MudButton>
+    </div>
+    <MudText Typo="Typo.body1">Pre-Visualização</MudText>
+
+    <video width="400" controls>
+        <source src="@Tools.PreviewVideo()" type="video/mp4">
+    </video>
+    
+}
+
+@code {
+    [Parameter] public string Title { get; set; }
+    [Parameter] public IBaseTools<T> Tools { get; set; }
+    private T info;
+    private bool isloading = false;
+
+    protected async override Task OnInitializedAsync()
+    {
+        isloading = true;
+        StateHasChanged();
+        await Tools.Download();
+        info = Tools.Info;
+        isloading = false;
+        StateHasChanged();
+    }
+
+    private void OpenContent()
+    {
+        Tools.Open();
+    }
+}

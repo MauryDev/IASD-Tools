@@ -2,6 +2,8 @@ using IASD.Sonoplastia.Components;
 using IASD.Sonoplastia.Services;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using MudBlazor.Services;
 using QRCoder;
 
@@ -14,8 +16,11 @@ builder.WebHost.ConfigureKestrel((context, serverOptions) =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddMudServices();
+builder.Services.AddDbContext<IASD.Sonoplastia.ContextDB.SonoplastiaDBContext>(options =>
+           options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddSingleton<IInformativoTools, InformativoTools>();
 builder.Services.AddSingleton<IProvaiVedeTools, ProvaiVedeTools>();
+
 
 var app = builder.Build();
 
@@ -36,6 +41,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 
+
 app.MapGet("/qrcode.png", async(req) =>
 {
     var iserver = app.Services.GetService<IServer>();
@@ -44,7 +50,7 @@ app.MapGet("/qrcode.png", async(req) =>
     using QRCodeGenerator qrGenerator = new();
     using QRCodeData qrCodeData = qrGenerator.CreateQrCode(remoteIpAddress, QRCodeGenerator.ECCLevel.Q);
     using PngByteQRCode qrCode = new(qrCodeData);
-    byte[] qrCodeImage = qrCode.GetGraphic(20);
+    byte[] qrCodeImage = qrCode.GetGraphic(20, System.Drawing.Color.DeepSkyBlue,System.Drawing.Color.White);
     var res = req.Response;
     res.Headers.ContentType = "image/png";
     res.StatusCode = 200;
